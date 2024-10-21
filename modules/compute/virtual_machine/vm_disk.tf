@@ -1,3 +1,12 @@
+locals {
+  virtual_machine_settings = var.settings.virtual_machine_settings
+
+  image_reference_id = try(local.virtual_machine_settings.source_image_reference, null) == null ? format("%s%s",
+    try(local.virtual_machine_settings.custom_image_id, var.image_definitions[try(local.virtual_machine_settings.custom_image_lz_key, var.client_config.landingzone_key)][local.virtual_machine_settings.custom_image_key].id),
+    try("/versions/${local.virtual_machine_settings.custom_image_version}", "")) : null
+}
+
+
 data "azurecaf_name" "disk" {
   for_each = lookup(var.settings, "data_disks", {})
 
@@ -13,9 +22,7 @@ data "azurecaf_name" "disk" {
 resource "azurerm_managed_disk" "disk" { 
   for_each = lookup(var.settings, "data_disks", {})
 
-  image_reference_id = try(each.value.source_image_reference, null) == null ? format("%s%s",
-    try(each.value.custom_image_id, var.image_definitions[try(each.value.custom_image_lz_key, var.client_config.landingzone_key)][each.value.custom_image_key].id),
-    try("/versions/${each.value.custom_image_version}", "")) : null
+  image_reference_id     = local.image_reference_id
 
   name                   = data.azurecaf_name.disk[each.key].result
   location               = local.location

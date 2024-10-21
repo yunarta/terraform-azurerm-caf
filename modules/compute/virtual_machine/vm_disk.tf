@@ -1,5 +1,5 @@
 locals {
-  virtual_machine_settings = var.settings.virtual_machine_settings
+  virtual_machine_settings = var.settings.virtual_machine_settings[var.settings.os_type]
 
   image_reference_id = try(local.virtual_machine_settings.source_image_reference, null) == null ? format("%s%s",
     try(local.virtual_machine_settings.custom_image_id, var.image_definitions[try(local.virtual_machine_settings.custom_image_lz_key, var.client_config.landingzone_key)][local.virtual_machine_settings.custom_image_key].id),

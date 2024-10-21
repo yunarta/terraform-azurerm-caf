@@ -13,6 +13,10 @@ data "azurecaf_name" "disk" {
 resource "azurerm_managed_disk" "disk" { 
   for_each = lookup(var.settings, "data_disks", {})
 
+  image_reference_id = try(each.value.source_image_reference, null) == null ? format("%s%s",
+    try(each.value.custom_image_id, var.image_definitions[try(each.value.custom_image_lz_key, var.client_config.landingzone_key)][each.value.custom_image_key].id),
+    try("/versions/${each.value.custom_image_version}", "")) : null
+
   name                   = data.azurecaf_name.disk[each.key].result
   location               = local.location
   resource_group_name    = local.resource_group_name
